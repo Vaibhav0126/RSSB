@@ -39,6 +39,29 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+// Health check with database connectivity
+app.get("/api/health", async (req, res) => {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    res.json({
+      status: "OK",
+      message: "Spiritual Content API is running",
+      database: "Connected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Health check failed:", error);
+    res.status(503).json({
+      status: "ERROR",
+      message: "Database connection failed",
+      error: process.env.NODE_ENV === "development" ? String(error) : "Service unavailable",
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 // API Routes
 app.use("/api/content", contentRoutes);
 app.use("/api/notifications", notificationRoutes);
@@ -63,29 +86,6 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(frontendBuildPath, "index.html"));
   });
 }
-
-// Health check with database connectivity
-app.get("/api/health", async (req, res) => {
-  try {
-    // Test database connection
-    await prisma.$queryRaw`SELECT 1`;
-    
-    res.json({
-      status: "OK",
-      message: "Spiritual Content API is running",
-      database: "Connected",
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("Health check failed:", error);
-    res.status(503).json({
-      status: "ERROR",
-      message: "Database connection failed",
-      error: process.env.NODE_ENV === "development" ? String(error) : "Service unavailable",
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
 
 // Error handling middleware
 app.use(
