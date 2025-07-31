@@ -18,7 +18,7 @@ dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || process.env.RAILWAY_PORT || 5000;
 
 // Middleware
 app.use(helmet());
@@ -128,9 +128,11 @@ async function startServer() {
     await prisma.$connect();
     console.log("✅ Database connected successfully");
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`🌐 PORT from env: ${process.env.PORT}`);
+      console.log(`🚂 RAILWAY_PORT from env: ${process.env.RAILWAY_PORT}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
     });
   } catch (error) {
