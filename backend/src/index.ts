@@ -81,11 +81,12 @@ if (process.env.NODE_ENV === "production") {
   // Find frontend build files - try multiple possible locations
   let frontendBuildPath: string | undefined;
   const possiblePaths = [
+    "/app/frontend/build",
+    path.join(process.cwd(), "../frontend/build"),
     path.join(__dirname, "../../frontend/build"),
     path.join(__dirname, "../../../frontend/build"), 
     path.join(__dirname, "../../../../frontend/build"),
     path.join(__dirname, "../frontend/build"),
-    "/app/frontend/build",
     path.join(process.cwd(), "frontend/build"),
   ];
   
