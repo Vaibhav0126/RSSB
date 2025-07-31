@@ -179,26 +179,22 @@ async function main() {
     await prisma.oTP.deleteMany();
     await prisma.notification.deleteMany();
     await prisma.book.deleteMany();
-    await prisma.admin.deleteMany();
-    await prisma.category.deleteMany();
+    await prisma.user.deleteMany();
 
     console.log("🗑️ Cleared existing data");
 
     // Create admin user
     console.log("👤 Creating admin user...");
-    await prisma.admin.create({
+    await prisma.user.create({
       data: {
         email: adminUser.email,
+        name: "Admin User",
+        role: "ADMIN",
       },
     });
 
-    // Seed categories
-    console.log("📂 Seeding categories...");
-    for (const category of categories) {
-      await prisma.category.create({
-        data: category,
-      });
-    }
+    // Note: Categories are now handled as string fields in books
+    console.log("📂 Categories will be added as book metadata...");
 
     // Seed sample books
     console.log("📚 Seeding sample books...");
@@ -212,7 +208,11 @@ async function main() {
     console.log("🔔 Seeding notifications...");
     for (const notification of notifications) {
       await prisma.notification.create({
-        data: notification,
+        data: {
+          title: notification.title,
+          message: notification.message,
+          type: notification.type as any, // Type casting for enum
+        },
       });
     }
 

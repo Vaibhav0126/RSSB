@@ -120,18 +120,12 @@ async function main() {
 
     // Clear existing data
     await prisma.notification.deleteMany();
-    await prisma.content.deleteMany();
-    await prisma.category.deleteMany();
+    await prisma.book.deleteMany();
 
     console.log("🗑️ Cleared existing data");
 
-    // Seed categories
-    console.log("📂 Seeding categories...");
-    for (const category of categories) {
-      await prisma.category.create({
-        data: category,
-      });
-    }
+    // Note: Categories are now stored as string fields in books
+    console.log("📂 Categories will be handled as book metadata...");
 
     // Seed content from extracted data
     console.log("📚 Seeding spiritual content from extracted data...");
@@ -145,12 +139,13 @@ async function main() {
 
       for (const item of batch) {
         try {
-          await prisma.content.create({
+          await prisma.book.create({
             data: {
               title: item.title || "Untitled",
-              description: item.description || "",
+              briefIntro: item.description || "Spiritual content",
+              content: item.content || item.description || "Spiritual wisdom content",
+              keywords: item.tags || [],
               category: item.category || "सामान्य शिक्षा",
-              tags: item.tags || [],
             },
           });
           processedCount++;
@@ -173,7 +168,11 @@ async function main() {
     console.log("🔔 Seeding notifications...");
     for (const notification of notifications) {
       await prisma.notification.create({
-        data: notification,
+        data: {
+          title: notification.title,
+          message: notification.message,
+          type: notification.type as any, // Type casting for enum
+        },
       });
     }
 
@@ -181,25 +180,23 @@ async function main() {
     console.log(`📊 Final results:`);
 
     // Get final counts
-    const [contentCount, categoryCount, notificationCount] = await Promise.all([
-      prisma.content.count(),
-      prisma.category.count(),
+    const [bookCount, notificationCount] = await Promise.all([
+      prisma.book.count(),
       prisma.notification.count(),
     ]);
 
-    console.log(`   - ${categoryCount} categories`);
-    console.log(`   - ${contentCount} content items`);
+    console.log(`   - ${bookCount} books`);
     console.log(`   - ${notificationCount} notifications`);
 
     // Show category breakdown
-    const categoryBreakdown = await prisma.content.groupBy({
+    const categoryBreakdown = await prisma.book.groupBy({
       by: ["category"],
       _count: { category: true },
       orderBy: { _count: { category: "desc" } },
     });
 
     console.log(`\n📈 Content by category:`);
-    categoryBreakdown.forEach((item) => {
+    categoryBreakdown.forEach((item: any) => {
       console.log(`   - ${item.category}: ${item._count.category} items`);
     });
   } catch (error) {
