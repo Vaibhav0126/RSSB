@@ -78,11 +78,12 @@ app.use("/api/threads", threadRoutes);
 
 // Serve React frontend in production
 if (process.env.NODE_ENV === "production") {
-  const frontendBuildPath = path.join(__dirname, "../../../frontend/build");
-
+  // Railway puts everything in /app, so adjust the path
+  const frontendBuildPath = path.join(__dirname, "../../frontend/build");
+  
   console.log("🔍 Frontend build path:", frontendBuildPath);
   console.log("📁 Current __dirname:", __dirname);
-
+  
   // Check if build directory exists
   if (fs.existsSync(frontendBuildPath)) {
     console.log("✅ Frontend build directory exists");
@@ -90,20 +91,33 @@ if (process.env.NODE_ENV === "production") {
     console.log("📄 Build files:", files.slice(0, 5)); // Show first 5 files
   } else {
     console.error("❌ Frontend build directory NOT found:", frontendBuildPath);
+    // Try alternative paths
+    const altPath1 = path.join(__dirname, "../frontend/build");
+    const altPath2 = path.join(__dirname, "../../../../frontend/build");
+    console.log("🔍 Trying alternative path 1:", altPath1, "exists:", fs.existsSync(altPath1));
+    console.log("🔍 Trying alternative path 2:", altPath2, "exists:", fs.existsSync(altPath2));
   }
 
-  // Serve static files from React build
+    // Serve static files from React build
   app.use(express.static(frontendBuildPath));
-
+  
   // Handle React routing, return index.html for non-API routes
   app.get("*", (req, res) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith("/api/")) {
       return res.status(404).json({ error: "API route not found" });
     }
-
+    
     console.log("📄 Serving index.html for path:", req.path);
-    res.sendFile(path.join(frontendBuildPath, "index.html"));
+    const indexPath = path.join(frontendBuildPath, "index.html");
+    
+    // Check if index.html exists before trying to serve it
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error("❌ index.html not found at:", indexPath);
+      res.status(500).json({ error: "Frontend not available", path: indexPath });
+    }
   });
 }
 
