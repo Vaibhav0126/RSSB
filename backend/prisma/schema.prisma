@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Book {
+  id          String   @id @default(cuid())
+  title       String
+  briefIntro  String   
+  content     String   // Long text content
+  keywords    String[] @default([]) // Hindi/English keywords for search
+  category    String   @default("spiritual")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("books")
+}
+
+enum UserRole {
+  ADMIN
+  MENTOR  
+  SK
+  ASK
+  USER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdBy String?  // ID of the user who created this user (for mentor/admin tracking)
+  creator   User?    @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  createdUsers User[] @relation("UserCreatedBy")
+  
+  // Meeting relationships
+  scheduledMeetings  Meeting[] @relation("MeetingScheduler")
+  
+  // Notification relationships
+  notifications      Notification[]
+  
+  // Thread and Comment relationships
+  threads           Thread[]  @relation("ThreadAuthor")
+  comments          Comment[] @relation("CommentAuthor")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("otps")
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Meeting {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  location    String?       // Meeting location
+  startTime   DateTime
+  endTime     DateTime
+  status      MeetingStatus @default(SCHEDULED)
+  meetingLink String?       // Video call link
+  targetRoles String[]      // Array of roles like ["SK", "ASK", "MENTOR"]
+  
+  // Who scheduled the meeting (Admin or Mentor)
+  schedulerId String
+  scheduler   User   @relation("MeetingScheduler", fields: [schedulerId], references: [id])
+
+  // Add notifications relation
+  notifications Notification[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("meetings")
+}
+
+
+
+enum NotificationType {
+  INFO
+  BOOK_ADDED
+  BOOK_REMOVED
+  MEETING_SCHEDULED
+  MEETING_REMINDER
+  MEETING_CANCELLED
+  USER_REGISTERED
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  title       String
+  message     String
+  type        NotificationType @default(INFO)
+  isRead      Boolean          @default(false)
+  
+  // Who should receive this notification (if null, it's for everyone)
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id])
+  
+  // Related meeting (if applicable)
+  meetingId   String?
+  meeting     Meeting?         @relation(fields: [meetingId], references: [id])
+  
+  createdAt   DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String   @default("#6B7280")
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Thread {
+  id        String    @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  author    User      @relation("ThreadAuthor", fields: [authorId], references: [id])
+  comments  Comment[]
+  isLocked  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("threads")
+}
+
+model Comment {
+  id       String   @id @default(cuid())
+  content  String
+  authorId String
+  author   User     @relation("CommentAuthor", fields: [authorId], references: [id])
+  threadId String
+  thread   Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+}

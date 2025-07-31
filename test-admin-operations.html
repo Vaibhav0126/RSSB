@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RSSB Admin Test</title>
+  </head>
+  <body>
+    <h1>RSSB Admin Operations Test</h1>
+
+    <div id="status">Loading...</div>
+
+    <h2>1. Login Test</h2>
+    <button onclick="testLogin()">Test Admin Login</button>
+    <div id="loginResult"></div>
+
+    <h2>2. Meetings Test</h2>
+    <button onclick="testMeetings()">Test Meetings API</button>
+    <div id="meetingsResult"></div>
+
+    <h2>3. Available Attendees Test</h2>
+    <button onclick="testAttendees()">Test Available Attendees</button>
+    <div id="attendeesResult"></div>
+
+    <script>
+      const API_BASE = "http://localhost:5001/api";
+      let authToken = localStorage.getItem("userToken");
+
+      document.getElementById("status").innerHTML = authToken
+        ? `✅ Auth Token Found: ${authToken.substring(0, 20)}...`
+        : "❌ No Auth Token Found";
+
+      async function testLogin() {
+        try {
+          const response = await fetch(
+            `${API_BASE}/content/admin/generate-otp`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: "rssbsearch@gmail.com" }),
+            }
+          );
+          const result = await response.json();
+          document.getElementById(
+            "loginResult"
+          ).innerHTML = `✅ OTP Generation: ${JSON.stringify(result, null, 2)}`;
+        } catch (error) {
+          document.getElementById(
+            "loginResult"
+          ).innerHTML = `❌ Error: ${error.message}`;
+        }
+      }
+
+      async function testMeetings() {
+        if (!authToken) {
+          document.getElementById("meetingsResult").innerHTML =
+            "❌ No auth token. Please login first.";
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/meetings`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const result = await response.json();
+          document.getElementById(
+            "meetingsResult"
+          ).innerHTML = `✅ Meetings API: ${JSON.stringify(result, null, 2)}`;
+        } catch (error) {
+          document.getElementById(
+            "meetingsResult"
+          ).innerHTML = `❌ Error: ${error.message}`;
+        }
+      }
+
+      async function testAttendees() {
+        if (!authToken) {
+          document.getElementById("attendeesResult").innerHTML =
+            "❌ No auth token. Please login first.";
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE}/meetings/available-attendees`,
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+            }
+          );
+          const result = await response.json();
+          document.getElementById(
+            "attendeesResult"
+          ).innerHTML = `✅ Available Attendees: ${JSON.stringify(
+            result,
+            null,
+            2
+          )}`;
+        } catch (error) {
+          document.getElementById(
+            "attendeesResult"
+          ).innerHTML = `❌ Error: ${error.message}`;
+        }
+      }
+    </script>
+  </body>
+</html>

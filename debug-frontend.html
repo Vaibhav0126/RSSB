@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RSSB Frontend Debug Tool</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .section {
+        background: #f5f5f5;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .success {
+        color: green;
+      }
+      .error {
+        color: red;
+      }
+      .warning {
+        color: orange;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        cursor: pointer;
+      }
+      pre {
+        background: #eee;
+        padding: 10px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 RSSB Frontend Debug Tool</h1>
+
+    <div class="section">
+      <h2>1. Authentication Status</h2>
+      <div id="authStatus">Checking...</div>
+      <button onclick="refreshAuthStatus()">Refresh Auth Status</button>
+      <button onclick="clearAuth()">Clear All Auth Data</button>
+    </div>
+
+    <div class="section">
+      <h2>2. Quick OTP Login Test</h2>
+      <button onclick="testOTPGeneration()">Generate OTP</button>
+      <div id="otpResult"></div>
+      <br />
+      <input
+        type="text"
+        id="otpInput"
+        placeholder="Enter 6-digit OTP"
+        maxlength="6"
+      />
+      <button onclick="testOTPVerification()">Verify OTP</button>
+      <div id="otpVerifyResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>3. API Tests (Requires Login)</h2>
+      <button onclick="testBooksAPI()">Test Books API</button>
+      <button onclick="testUsersAPI()">Test Users API</button>
+      <button onclick="testMeetingsAPI()">Test Meetings API</button>
+      <button onclick="testAttendeesAPI()">Test Attendees API</button>
+      <div id="apiResults"></div>
+    </div>
+
+    <div class="section">
+      <h2>4. Network Connectivity</h2>
+      <button onclick="testBackendHealth()">Test Backend Health</button>
+      <button onclick="testFrontendAccess()">Test Frontend Access</button>
+      <div id="networkResults"></div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:5001/api";
+
+      function refreshAuthStatus() {
+        const userToken = localStorage.getItem("userToken");
+        const userData = localStorage.getItem("userData");
+        const adminToken = localStorage.getItem("adminToken"); // Legacy
+
+        let html = "<h3>LocalStorage Auth Data:</h3>";
+
+        if (userToken) {
+          html += `<div class="success">✅ userToken: ${userToken.substring(
+            0,
+            30
+          )}...</div>`;
+          try {
+            const payload = JSON.parse(atob(userToken.split(".")[1]));
+            html += `<pre>Token Payload: ${JSON.stringify(
+              payload,
+              null,
+              2
+            )}</pre>`;
+          } catch (e) {
+            html += `<div class="error">❌ Invalid token format</div>`;
+          }
+        } else {
+          html += `<div class="error">❌ No userToken found</div>`;
+        }
+
+        if (userData) {
+          html += `<div class="success">✅ userData: ${userData}</div>`;
+        } else {
+          html += `<div class="error">❌ No userData found</div>`;
+        }
+
+        if (adminToken) {
+          html += `<div class="warning">⚠️ Legacy adminToken found: ${adminToken.substring(
+            0,
+            30
+          )}...</div>`;
+        }
+
+        document.getElementById("authStatus").innerHTML = html;
+      }
+
+      function clearAuth() {
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("userData");
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminUser");
+        alert("All auth data cleared!");
+        refreshAuthStatus();
+      }
+
+      async function testOTPGeneration() {
+        try {
+          const response = await fetch(
+            `${API_BASE}/content/admin/generate-otp`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: "rssbsearch@gmail.com" }),
+            }
+          );
+          const result = await response.json();
+          document.getElementById(
+            "otpResult"
+          ).innerHTML = `<div class="success">✅ OTP Generated: ${JSON.stringify(
+            result,
+            null,
+            2
+          )}</div>
+                     <div class="warning">⚠️ Check your backend console for the OTP code!</div>`;
+        } catch (error) {
+          document.getElementById(
+            "otpResult"
+          ).innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testOTPVerification() {
+        const otp = document.getElementById("otpInput").value;
+        if (!otp) {
+          alert("Please enter the OTP first");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/content/admin/verify-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: "rssbsearch@gmail.com",
+              otp: otp,
+            }),
+          });
+          const result = await response.json();
+
+          if (response.ok && result.token) {
+            // Store the token like the frontend does
+            localStorage.setItem("userToken", result.token);
+            localStorage.setItem("userData", JSON.stringify(result.user));
+
+            document.getElementById(
+              "otpVerifyResult"
+            ).innerHTML = `<div class="success">✅ Login Successful!</div>
+                         <pre>${JSON.stringify(result, null, 2)}</pre>`;
+            refreshAuthStatus();
+          } else {
+            document.getElementById(
+              "otpVerifyResult"
+            ).innerHTML = `<div class="error">❌ Login Failed: ${JSON.stringify(
+              result,
+              null,
+              2
+            )}</div>`;
+          }
+        } catch (error) {
+          document.getElementById(
+            "otpVerifyResult"
+          ).innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testAPI(endpoint, name) {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+          return `<div class="error">❌ ${name}: No auth token</div>`;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}${endpoint}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            return `<div class="success">✅ ${name}: OK (${response.status})</div>`;
+          } else {
+            return `<div class="error">❌ ${name}: ${
+              response.status
+            } - ${JSON.stringify(result)}</div>`;
+          }
+        } catch (error) {
+          return `<div class="error">❌ ${name}: ${error.message}</div>`;
+        }
+      }
+
+      async function testBooksAPI() {
+        const result = await testAPI("/content/books", "Books API");
+        document.getElementById("apiResults").innerHTML = result;
+      }
+
+      async function testUsersAPI() {
+        const result = await testAPI("/users", "Users API");
+        document.getElementById("apiResults").innerHTML = result;
+      }
+
+      async function testMeetingsAPI() {
+        const result = await testAPI("/meetings", "Meetings API");
+        document.getElementById("apiResults").innerHTML = result;
+      }
+
+      async function testAttendeesAPI() {
+        const result = await testAPI(
+          "/meetings/available-attendees",
+          "Available Attendees API"
+        );
+        document.getElementById("apiResults").innerHTML = result;
+      }
+
+      async function testBackendHealth() {
+        try {
+          const response = await fetch(`${API_BASE}/health`);
+          const result = await response.json();
+          document.getElementById(
+            "networkResults"
+          ).innerHTML = `<div class="success">✅ Backend Health: ${JSON.stringify(
+            result,
+            null,
+            2
+          )}</div>`;
+        } catch (error) {
+          document.getElementById(
+            "networkResults"
+          ).innerHTML = `<div class="error">❌ Backend Health: ${error.message}</div>`;
+        }
+      }
+
+      async function testFrontendAccess() {
+        try {
+          const response = await fetch("http://localhost:3000");
+          document.getElementById(
+            "networkResults"
+          ).innerHTML += `<div class="success">✅ Frontend: Accessible (${response.status})</div>`;
+        } catch (error) {
+          document.getElementById(
+            "networkResults"
+          ).innerHTML += `<div class="error">❌ Frontend: ${error.message}</div>`;
+        }
+      }
+
+      // Initialize
+      window.onload = () => {
+        refreshAuthStatus();
+      };
+    </script>
+  </body>
+</html>
