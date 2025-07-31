@@ -25,6 +25,7 @@ RSSB Platform is a modern, full-stack web application designed to facilitate spi
 ## 🏗️ Architecture
 
 ### Frontend Stack
+
 - **React 18** with TypeScript
 - **Tailwind CSS** for styling
 - **React Query** for state management & caching
@@ -32,6 +33,7 @@ RSSB Platform is a modern, full-stack web application designed to facilitate spi
 - **Heroicons** for UI icons
 
 ### Backend Stack
+
 - **Node.js** with Express.js
 - **TypeScript** for type safety
 - **Prisma** ORM with PostgreSQL
@@ -39,6 +41,7 @@ RSSB Platform is a modern, full-stack web application designed to facilitate spi
 - **Nodemailer** for email services
 
 ### Database
+
 - **PostgreSQL** with Prisma schema
 - Optimized queries with indexing
 - Role-based data access patterns
@@ -47,24 +50,27 @@ RSSB Platform is a modern, full-stack web application designed to facilitate spi
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL 14+
 - npm or yarn package manager
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Vaibhav0126/RSSB.git
    cd RSSB
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Setup environment variables**
+
    ```bash
    # Backend environment (.env in /backend)
    DATABASE_URL="postgresql://username:password@localhost:5432/rssb_db"
@@ -78,6 +84,7 @@ RSSB Platform is a modern, full-stack web application designed to facilitate spi
    ```
 
 4. **Setup database**
+
    ```bash
    cd backend
    npx prisma migrate dev
@@ -90,38 +97,44 @@ RSSB Platform is a modern, full-stack web application designed to facilitate spi
    ```
 
 The application will be available at:
+
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:5001
 
 ## 👥 User Roles & Permissions
 
 ### 🔴 Admin
+
 - **Full system control**
 - User management (create, edit, delete)
 - Content moderation
 - Meeting scheduling for all roles
 - Access to dashboard analytics
 
-### 🟣 Mentor  
+### 🟣 Mentor
+
 - **Guidance & oversight**
 - Register SK/ASK users
 - Schedule meetings
 - Content management
 - Moderate discussions
 
-### 🔵 SK (Satsang Kendra)
+### 🔵 SK (Satsang Karta)
+
 - **Local coordination**
 - View assigned meetings
 - Access library & discussions
 - Receive meeting notifications
 
-### 🟢 ASK (Assistant Satsang Kendra)
+### 🟢 ASK (Assistant Satsang Karta)
+
 - **Support role**
-- View assigned meetings  
+- View assigned meetings
 - Access library & discussions
 - Receive meeting notifications
 
 ### 🟡 User (Public)
+
 - **General access**
 - Browse library
 - Read discussions
@@ -130,24 +143,28 @@ The application will be available at:
 ## 📱 Features Overview
 
 ### 📚 Spiritual Library
+
 - **Advanced Search**: Full-text search with Hindi keyword support
 - **Book Management**: CRUD operations for spiritual literature
 - **Content Organization**: Categorized spiritual content
 - **Mobile Optimized**: Responsive reading experience
 
 ### 💬 Discussion Platform
+
 - **Q&A Format**: Quora-style question and answer system
 - **Search Functionality**: Find discussions by content or keywords
 - **Social Features**: Upvoting, sharing, and community interaction
 - **Moderation Tools**: Lock discussions, edit content
 
 ### 📅 Meeting Management
+
 - **Role-Based Scheduling**: Assign meetings to specific user roles
 - **Location Support**: Physical and virtual meeting options
 - **Status Tracking**: Scheduled, completed, cancelled states
 - **Notification System**: Automatic meeting reminders
 
 ### 🔔 Notification System
+
 - **Real-Time Updates**: New content and meeting notifications
 - **User-Specific**: Personalized notification feeds
 - **Bell Icon**: Header notification badge with unread count
@@ -156,6 +173,7 @@ The application will be available at:
 ## 🛠️ Development
 
 ### Project Structure
+
 ```
 RSSB/
 ├── backend/                 # Node.js API server
@@ -197,12 +215,14 @@ npm run db:reset        # Reset database
 ### API Endpoints
 
 #### Authentication
+
 ```http
 POST /api/users/generate-otp    # Generate login OTP
 POST /api/users/verify-otp      # Verify OTP & login
 ```
 
 #### Content Management
+
 ```http
 GET    /api/content/books       # List books
 POST   /api/content/books       # Create book (Admin/Mentor)
@@ -212,6 +232,7 @@ GET    /api/content/search      # Search content
 ```
 
 #### Discussions
+
 ```http
 GET    /api/threads             # List discussions
 POST   /api/threads             # Create discussion
@@ -220,6 +241,7 @@ POST   /api/threads/:id/comments # Add comment
 ```
 
 #### Meetings
+
 ```http
 GET    /api/meetings            # List meetings
 POST   /api/meetings            # Schedule meeting
@@ -230,7 +252,7 @@ DELETE /api/meetings/:id        # Cancel meeting
 ## 🔒 Security Features
 
 - **JWT Authentication**: Secure token-based auth
-- **OTP Verification**: Email-based login verification  
+- **OTP Verification**: Email-based login verification
 - **Role-Based Access**: Granular permission system
 - **Input Validation**: Comprehensive data validation
 - **CORS Protection**: Cross-origin request security
@@ -239,18 +261,21 @@ DELETE /api/meetings/:id        # Cancel meeting
 ## 🎨 UI/UX Design
 
 ### Design System
+
 - **Color Palette**: Red primary (`#dc2626`) with spiritual aesthetics
 - **Typography**: Clean, readable fonts optimized for content
 - **Icons**: Heroicons for consistent iconography
 - **Spacing**: Tailwind's systematic spacing scale
 
 ### Responsive Design
+
 - **Mobile-First**: Optimized for mobile usage
-- **Tablet Support**: Adapted layouts for tablet screens  
+- **Tablet Support**: Adapted layouts for tablet screens
 - **Desktop Experience**: Full-featured desktop interface
 - **Touch-Friendly**: Large touch targets for mobile
 
 ### Accessibility
+
 - **Keyboard Navigation**: Full keyboard accessibility
 - **Screen Reader Support**: Semantic HTML structure
 - **Color Contrast**: WCAG compliant color ratios
@@ -259,12 +284,14 @@ DELETE /api/meetings/:id        # Cancel meeting
 ## 🚀 Deployment
 
 ### Environment Setup
+
 1. **Production Database**: PostgreSQL with connection pooling
 2. **Email Service**: SMTP configuration for notifications
 3. **Environment Variables**: Secure secret management
 4. **SSL Certificate**: HTTPS for secure communication
 
 ### Build Process
+
 ```bash
 # Build for production
 npm run build
@@ -274,6 +301,7 @@ npm start
 ```
 
 ### Docker Support (Optional)
+
 ```dockerfile
 # Dockerfile example
 FROM node:18-alpine
@@ -289,6 +317,7 @@ CMD ["npm", "start"]
 ## 📊 Database Schema
 
 ### Key Models
+
 - **Users**: Authentication and role management
 - **Books**: Spiritual literature content
 - **Threads**: Discussion questions
@@ -297,6 +326,7 @@ CMD ["npm", "start"]
 - **Notifications**: User notifications
 
 ### Relationships
+
 - Users have roles and can create content
 - Threads have many comments (answers)
 - Meetings target specific user roles
@@ -313,6 +343,7 @@ We welcome contributions to improve the RSSB platform! Please follow these guide
 5. **Open a Pull Request**
 
 ### Code Standards
+
 - Use TypeScript for type safety
 - Follow ESLint configuration
 - Write meaningful commit messages
@@ -338,8 +369,3 @@ For technical support or spiritual guidance:
 - **Community**: Join our spiritual discussions within the platform
 
 ---
-
-### 🌟 "खुदा मिल जाएगा, बंदे मन में दीप जलाएगा"
-*"The Divine will be found when the seeker lights the lamp within the heart"*
-
-**Made with ❤️ for spiritual seekers worldwide**
