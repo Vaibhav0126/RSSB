@@ -44,13 +44,27 @@ app.use("/api/users", userRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/threads", threadRoutes);
 
-// Health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "OK",
-    message: "Spiritual Content API is running",
-    timestamp: new Date().toISOString(),
-  });
+// Health check with database connectivity
+app.get("/api/health", async (req, res) => {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    res.json({
+      status: "OK",
+      message: "Spiritual Content API is running",
+      database: "Connected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Health check failed:", error);
+    res.status(503).json({
+      status: "ERROR",
+      message: "Database connection failed",
+      error: process.env.NODE_ENV === "development" ? error.message : "Service unavailable",
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Error handling middleware
@@ -84,9 +98,26 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
-});
+// Start server with proper error handling
+async function startServer() {
+  try {
+    // Test database connection on startup
+    console.log("🔍 Testing database connection...");
+    await prisma.$connect();
+    console.log("✅ Database connected successfully");
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    console.error("🔍 Check your DATABASE_URL and ensure PostgreSQL is running");
+    process.exit(1);
+  }
+}
+
+startServer();
 
 export default app;
