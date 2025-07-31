@@ -18,7 +18,7 @@ dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || process.env.RAILWAY_PORT || 5000;
+const PORT = parseInt(process.env.PORT || process.env.RAILWAY_PORT || "5000", 10);
 
 // Middleware
 app.use(helmet());
