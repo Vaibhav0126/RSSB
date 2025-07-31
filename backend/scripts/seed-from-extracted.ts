@@ -143,7 +143,8 @@ async function main() {
             data: {
               title: item.title || "Untitled",
               briefIntro: item.description || "Spiritual content",
-              content: item.content || item.description || "Spiritual wisdom content",
+              content:
+                item.content || item.description || "Spiritual wisdom content",
               keywords: item.tags || [],
               category: item.category || "सामान्य शिक्षा",
             },

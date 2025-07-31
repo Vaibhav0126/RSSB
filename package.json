@@ -6,13 +6,11 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm start",
-    "build": "npm install && cd backend && npm install && npm run build && cd ../frontend && npm install && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build",
+    "build": "cd backend && npm run build",
     "start": "cd backend && npm start",
-    "db:setup": "cd backend && npm run db:generate && npm run db:migrate && npm run db:seed",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "railway:deploy": "npm run build && npm start"
+    "postinstall": "cd backend && npm install",
+    "db:setup": "cd backend && npm run db:generate && npm run db:migrate",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
   "keywords": [
     "spiritual",
