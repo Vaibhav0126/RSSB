@@ -61,7 +61,7 @@ app.get("/api/health", async (req, res) => {
     res.status(503).json({
       status: "ERROR",
       message: "Database connection failed",
-      error: process.env.NODE_ENV === "development" ? error.message : "Service unavailable",
+      error: process.env.NODE_ENV === "development" ? String(error) : "Service unavailable",
       timestamp: new Date().toISOString(),
     });
   }
