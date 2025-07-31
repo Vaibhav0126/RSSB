@@ -8,6 +8,8 @@
     "dev:frontend": "cd frontend && npm start",
     "build": "cd backend && npm run build",
     "start": "cd backend && npm start",
+    "railway:build": "cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build",
+    "railway:start": "cd backend && npm start",
     "postinstall": "cd backend && npm install",
     "db:setup": "cd backend && npm run db:generate && npm run db:migrate",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"

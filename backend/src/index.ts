@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import path from "path";
 import { PrismaClient } from "@prisma/client";
 
 // Import routes
@@ -38,11 +39,30 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+// API Routes
 app.use("/api/content", contentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/threads", threadRoutes);
+
+// Serve React frontend in production
+if (process.env.NODE_ENV === "production") {
+  const frontendBuildPath = path.join(__dirname, "../../../frontend/build");
+  
+  // Serve static files from React build
+  app.use(express.static(frontendBuildPath));
+  
+  // Handle React routing, return index.html for non-API routes
+  app.get("*", (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith("/api/")) {
+      return res.status(404).json({ error: "API route not found" });
+    }
+    
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
+  });
+}
 
 // Health check with database connectivity
 app.get("/api/health", async (req, res) => {
@@ -86,10 +106,12 @@ app.use(
   }
 );
 
-// 404 handler
-app.use("*", (req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
+// 404 handler for development (production uses React routing)
+if (process.env.NODE_ENV !== "production") {
+  app.use("*", (req, res) => {
+    res.status(404).json({ error: "Route not found" });
+  });
+}
 
 // Graceful shutdown
 process.on("SIGINT", async () => {

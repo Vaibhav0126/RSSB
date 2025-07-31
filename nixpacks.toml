@@ -3,15 +3,16 @@ nixPkgs = ['nodejs-18_x', 'npm-9_x']
 
 [phases.install]
 cmds = [
-  'npm ci --only=production',
-  'cd backend && npm ci --only=production'
+  'npm ci',
+  'cd frontend && npm ci',
+  'cd backend && npm ci'
 ]
 
 [phases.build]
 cmds = [
   'cd backend && npx prisma generate',
-  'npm run build'
+  'npm run railway:build'
 ]
 
 [start]
-cmd = 'npm run start'
+cmd = 'npm run railway:start'
