@@ -78,28 +78,42 @@ app.use("/api/threads", threadRoutes);
 
 // Serve React frontend in production
 if (process.env.NODE_ENV === "production") {
-  // Railway puts everything in /app, so adjust the path
-  const frontendBuildPath = path.join(__dirname, "../../frontend/build");
+  // Find frontend build files - try multiple possible locations
+  let frontendBuildPath: string | undefined;
+  const possiblePaths = [
+    path.join(__dirname, "../../frontend/build"),
+    path.join(__dirname, "../../../frontend/build"), 
+    path.join(__dirname, "../../../../frontend/build"),
+    path.join(__dirname, "../frontend/build"),
+    "/app/frontend/build",
+    path.join(process.cwd(), "frontend/build"),
+  ];
   
-  console.log("🔍 Frontend build path:", frontendBuildPath);
-  console.log("📁 Current __dirname:", __dirname);
+  console.log("🔍 Current __dirname:", __dirname);
+  console.log("🔍 Current process.cwd():", process.cwd());
   
-  // Check if build directory exists
-  if (fs.existsSync(frontendBuildPath)) {
-    console.log("✅ Frontend build directory exists");
-    const files = fs.readdirSync(frontendBuildPath);
-    console.log("📄 Build files:", files.slice(0, 5)); // Show first 5 files
-  } else {
-    console.error("❌ Frontend build directory NOT found:", frontendBuildPath);
-    // Try alternative paths
-    const altPath1 = path.join(__dirname, "../frontend/build");
-    const altPath2 = path.join(__dirname, "../../../../frontend/build");
-    console.log("🔍 Trying alternative path 1:", altPath1, "exists:", fs.existsSync(altPath1));
-    console.log("🔍 Trying alternative path 2:", altPath2, "exists:", fs.existsSync(altPath2));
+  for (const testPath of possiblePaths) {
+    console.log(`🔍 Testing path: ${testPath} - exists: ${fs.existsSync(testPath)}`);
+    if (fs.existsSync(testPath)) {
+      frontendBuildPath = testPath;
+      console.log("✅ Found frontend build directory at:", frontendBuildPath);
+      const files = fs.readdirSync(frontendBuildPath);
+      console.log("📄 Build files:", files.slice(0, 5));
+      break;
+    }
+  }
+  
+  if (!frontendBuildPath) {
+    console.error("❌ Frontend build directory NOT found in any location");
+    // List contents of current directory for debugging
+    console.log("📁 Contents of __dirname:", fs.readdirSync(__dirname));
+    console.log("📁 Contents of process.cwd():", fs.readdirSync(process.cwd()));
   }
 
-    // Serve static files from React build
-  app.use(express.static(frontendBuildPath));
+  // Serve static files from React build (only if path exists)
+  if (frontendBuildPath) {
+    app.use(express.static(frontendBuildPath));
+  }
   
   // Handle React routing, return index.html for non-API routes
   app.get("*", (req, res) => {
@@ -109,14 +123,18 @@ if (process.env.NODE_ENV === "production") {
     }
     
     console.log("📄 Serving index.html for path:", req.path);
-    const indexPath = path.join(frontendBuildPath, "index.html");
+    const indexPath = frontendBuildPath ? path.join(frontendBuildPath, "index.html") : "";
     
     // Check if index.html exists before trying to serve it
-    if (fs.existsSync(indexPath)) {
+    if (frontendBuildPath && fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
       console.error("❌ index.html not found at:", indexPath);
-      res.status(500).json({ error: "Frontend not available", path: indexPath });
+      res.status(500).json({ 
+        error: "Frontend not available", 
+        path: indexPath,
+        buildPathFound: !!frontendBuildPath 
+      });
     }
   });
 }
