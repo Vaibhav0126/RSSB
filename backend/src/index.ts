@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import path from "path";
+import fs from "fs";
 import { PrismaClient } from "@prisma/client";
 
 // Import routes
@@ -18,7 +19,10 @@ dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = parseInt(process.env.PORT || process.env.RAILWAY_PORT || "5000", 10);
+const PORT = parseInt(
+  process.env.PORT || process.env.RAILWAY_PORT || "5000",
+  10
+);
 
 // Middleware
 app.use(helmet());
@@ -44,7 +48,7 @@ app.get("/api/health", async (req, res) => {
   try {
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
-    
+
     res.json({
       status: "OK",
       message: "Spiritual Content API is running",
@@ -56,7 +60,10 @@ app.get("/api/health", async (req, res) => {
     res.status(503).json({
       status: "ERROR",
       message: "Database connection failed",
-      error: process.env.NODE_ENV === "development" ? String(error) : "Service unavailable",
+      error:
+        process.env.NODE_ENV === "development"
+          ? String(error)
+          : "Service unavailable",
       timestamp: new Date().toISOString(),
     });
   }
@@ -72,17 +79,30 @@ app.use("/api/threads", threadRoutes);
 // Serve React frontend in production
 if (process.env.NODE_ENV === "production") {
   const frontendBuildPath = path.join(__dirname, "../../../frontend/build");
-  
+
+  console.log("🔍 Frontend build path:", frontendBuildPath);
+  console.log("📁 Current __dirname:", __dirname);
+
+  // Check if build directory exists
+  if (fs.existsSync(frontendBuildPath)) {
+    console.log("✅ Frontend build directory exists");
+    const files = fs.readdirSync(frontendBuildPath);
+    console.log("📄 Build files:", files.slice(0, 5)); // Show first 5 files
+  } else {
+    console.error("❌ Frontend build directory NOT found:", frontendBuildPath);
+  }
+
   // Serve static files from React build
   app.use(express.static(frontendBuildPath));
-  
+
   // Handle React routing, return index.html for non-API routes
   app.get("*", (req, res) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith("/api/")) {
       return res.status(404).json({ error: "API route not found" });
     }
-    
+
+    console.log("📄 Serving index.html for path:", req.path);
     res.sendFile(path.join(frontendBuildPath, "index.html"));
   });
 }
@@ -95,7 +115,11 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    console.error(err.stack);
+    console.error("❌ Error occurred:");
+    console.error("URL:", req.method, req.url);
+    console.error("Error:", err.stack);
+    console.error("Message:", err.message);
+
     res.status(500).json({
       error: "Something went wrong!",
       message:
@@ -137,7 +161,9 @@ async function startServer() {
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);
-    console.error("🔍 Check your DATABASE_URL and ensure PostgreSQL is running");
+    console.error(
+      "🔍 Check your DATABASE_URL and ensure PostgreSQL is running"
+    );
     process.exit(1);
   }
 }
