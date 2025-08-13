@@ -81,20 +81,27 @@ if (process.env.NODE_ENV === "production") {
   // Find frontend build files - try multiple possible locations
   let frontendBuildPath: string | undefined;
   const possiblePaths = [
+    // Prefer co-located build bundled during deploy
+    path.join(__dirname, "public"),
+    process.env.FRONTEND_BUILD_PATH || "",
     "/app/frontend/build",
     path.join(process.cwd(), "../frontend/build"),
     path.join(__dirname, "../../frontend/build"),
-    path.join(__dirname, "../../../frontend/build"), 
+    path.join(__dirname, "../../../frontend/build"),
     path.join(__dirname, "../../../../frontend/build"),
     path.join(__dirname, "../frontend/build"),
     path.join(process.cwd(), "frontend/build"),
   ];
-  
+
   console.log("🔍 Current __dirname:", __dirname);
   console.log("🔍 Current process.cwd():", process.cwd());
-  
-  for (const testPath of possiblePaths) {
-    console.log(`🔍 Testing path: ${testPath} - exists: ${fs.existsSync(testPath)}`);
+
+  for (const rawPath of possiblePaths) {
+    const testPath = rawPath?.trim();
+    if (!testPath) continue;
+    console.log(
+      `🔍 Testing path: ${testPath} - exists: ${fs.existsSync(testPath)}`
+    );
     if (fs.existsSync(testPath)) {
       frontendBuildPath = testPath;
       console.log("✅ Found frontend build directory at:", frontendBuildPath);
@@ -103,7 +110,7 @@ if (process.env.NODE_ENV === "production") {
       break;
     }
   }
-  
+
   if (!frontendBuildPath) {
     console.error("❌ Frontend build directory NOT found in any location");
     // List contents of current directory for debugging
@@ -115,26 +122,28 @@ if (process.env.NODE_ENV === "production") {
   if (frontendBuildPath) {
     app.use(express.static(frontendBuildPath));
   }
-  
+
   // Handle React routing, return index.html for non-API routes
   app.get("*", (req, res) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith("/api/")) {
       return res.status(404).json({ error: "API route not found" });
     }
-    
+
     console.log("📄 Serving index.html for path:", req.path);
-    const indexPath = frontendBuildPath ? path.join(frontendBuildPath, "index.html") : "";
-    
+    const indexPath = frontendBuildPath
+      ? path.join(frontendBuildPath, "index.html")
+      : "";
+
     // Check if index.html exists before trying to serve it
     if (frontendBuildPath && fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
       console.error("❌ index.html not found at:", indexPath);
-      res.status(500).json({ 
-        error: "Frontend not available", 
+      res.status(500).json({
+        error: "Frontend not available",
         path: indexPath,
-        buildPathFound: !!frontendBuildPath 
+        buildPathFound: !!frontendBuildPath,
       });
     }
   });
