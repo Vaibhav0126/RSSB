@@ -11,7 +11,7 @@
     "build:backend": "npm --prefix backend run build",
     "start": "cd backend && npm start",
     "railway:build": "npm run build",
-    "railway:start": "cd backend && npx prisma generate && npx prisma db push && node scripts/seed-roles.js || true && npm start",
+    "railway:start": "cd backend && npx prisma generate && npx prisma migrate deploy && npm start",
     "db:setup": "cd backend && npm run db:generate && npm run db:migrate",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
