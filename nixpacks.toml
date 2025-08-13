@@ -10,7 +10,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  'cd frontend && npm run build',
+  'npm run build --prefix frontend',
   'rm -rf backend/public && mkdir -p backend/public && cp -R frontend/build/* backend/public/',
   'cd backend && npx prisma generate && npm run build',
   'cd backend && mkdir -p dist/public && cp -R public/* dist/public/'
