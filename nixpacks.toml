@@ -4,16 +4,16 @@ nixPkgs = ['nodejs-18_x', 'npm-9_x']
 [phases.install]
 cmds = [
   'npm ci',
-  'cd frontend && npm ci', 
+  'bash -lc "if [ -f frontend/package.json ]; then cd frontend && npm ci; else echo \"frontend not present, skipping npm ci\"; fi"',
   'cd backend && npm ci'
 ]
 
 [phases.build]
 cmds = [
-  'npm --prefix frontend run build',
-  'rm -rf backend/public && mkdir -p backend/public && cp -R frontend/build/* backend/public/',
+  'bash -lc "if [ -f frontend/package.json ]; then npm --prefix frontend run build; else echo \"frontend not present, skipping build\"; fi"',
+  'bash -lc "if [ -d frontend/build ]; then rm -rf backend/public && mkdir -p backend/public && cp -R frontend/build/* backend/public/; else echo \"no frontend/build, skipping copy\"; fi"',
   'cd backend && npx prisma generate && npm run build',
-  'cd backend && mkdir -p dist/public && cp -R public/* dist/public/'
+  'bash -lc "if [ -d backend/public ]; then cd backend && mkdir -p dist/public && cp -R public/* dist/public/; else echo \"no backend/public, skipping copy to dist\"; fi"'
 ]
 
 [start]
