@@ -12,7 +12,6 @@
     "start": "cd backend && npm start",
     "railway:build": "npm run build",
     "railway:start": "cd backend && npx prisma generate && npx prisma migrate deploy && npm start",
-    "postinstall": "npm run install:all",
     "db:setup": "cd backend && npm run db:generate && npm run db:migrate",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
